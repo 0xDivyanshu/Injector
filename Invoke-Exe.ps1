@@ -2,7 +2,7 @@ function Invoke-Exe{
     [CmdletBinding()]
     param(
         [Parameter(Mandatory=$false,Position=0)]
-        [string] $args,
+        [string] $arguments,
 
         [Parameter(Mandatory=$true,Position=1)]
         [string] $loc
@@ -29,5 +29,5 @@ function Invoke-Exe{
     }
     $namespace = ([string]($f.EntryPoint | Select-Object -Property ReflectedType)).Substring(2).split("=")[1].split(",")[0]
     $obj = new-object $namespace
-    $obj::Main($args.Split(" "))
+    $obj::Main($arguments.Split(" "))
 }
