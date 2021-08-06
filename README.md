@@ -61,6 +61,14 @@ A specific function called basic_rev in Program.cs of Injector triggers windows 
 
 Main aim is to help me in OSEP :P
 
+# Powershell 
+
+You can use Invoke-Exe.ps1 to execute Injector from powershell in case there is applocker restriction on .NET execution.
+```
+Invoke-Exe -loc C:\Users\john\injector.exe
+```
+Note : Use the Debug build of Injector to load it Reflectivly in powershell.
+
 # Talk to me?
 
 Shoot me a DM on twitter @gh0st_R1d3r_0x9 to talk abt more interesting indeas/modules that can make this more amazing!
