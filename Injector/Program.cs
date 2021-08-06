@@ -217,12 +217,12 @@ namespace Injector
     }
 
     // Global class for more falgs
-    static class Flags
+    public static class Flags
     {
         public static int advanced_bypass = 0;
     }
 
-    class Program
+    public class Program
     {
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
         struct STARTUPINFO
