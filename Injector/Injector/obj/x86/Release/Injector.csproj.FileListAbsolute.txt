@@ -1,6 +1,0 @@
-C:\Users\root\source\repos\Injector\Injector\bin\x86\Release\Injector.exe.config
-C:\Users\root\source\repos\Injector\Injector\bin\x86\Release\Injector.exe
-C:\Users\root\source\repos\Injector\Injector\bin\x86\Release\Injector.pdb
-C:\Users\root\source\repos\Injector\Injector\obj\x86\Release\Injector.csproj.CoreCompileInputs.cache
-C:\Users\root\source\repos\Injector\Injector\obj\x86\Release\Injector.exe
-C:\Users\root\source\repos\Injector\Injector\obj\x86\Release\Injector.pdb

