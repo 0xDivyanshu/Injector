@@ -1,4 +1,4 @@
-∩╗┐using System;
+using System;
 using System.IO;
 using System.Security.Cryptography;
 using System.Text;
@@ -44,6 +44,25 @@ namespace Helper
             return;
         }
 
+        public static string CreateMD5(string input)
+        {
+            // Use input string to calculate MD5 hash
+            using (System.Security.Cryptography.MD5 md5 = System.Security.Cryptography.MD5.Create())
+            {
+                byte[] inputBytes = System.Text.Encoding.ASCII.GetBytes(input);
+                byte[] hashBytes = md5.ComputeHash(inputBytes);
+
+                // Convert the byte array to hexadecimal string
+                StringBuilder sb = new StringBuilder();
+                for (int i = 0; i < hashBytes.Length; i++)
+                {
+                    sb.Append(hashBytes[i].ToString("X2"));
+                }
+                return sb.ToString();
+            }
+        }
+
+        
         static void Main(string[] args)
         {
             if (args[0].StartsWith("-location") && args[1].StartsWith("-encrypt") && args[2].StartsWith("-password") && args[3].StartsWith("-saveTo"))
@@ -52,8 +71,19 @@ namespace Helper
                 string algo = args[1].Split('=')[1];
                 string pass = args[2].Split('=')[1];
                 string writeTo = args[3].Split('=')[1];
-
-                byte[] shellcode = File.ReadAllBytes(location);
+                pass = CreateMD5(pass);
+                byte[] shellcode;
+                if (location.StartsWith("http") || location.StartsWith("\\"))
+                {
+                    WebClient wc = new WebClient();
+                    string url = location;
+                    shellcode = wc.DownloadData(url);
+                }
+                else
+                {
+                    shellcode = File.ReadAllBytes(location);
+                }
+                
                 if (algo == "aes")
                 {
                     byte[] encoded_shellcode = Encrypt(shellcode, pass,"1234567891234567");
