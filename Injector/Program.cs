@@ -666,7 +666,7 @@ namespace Injector
             Console.WriteLine("Help Options for Xenon:");
             Console.WriteLine("-m \t Mode of operation");
             Console.WriteLine("\t-m 1 \t Specifies the mode as Process injection");
-            Console.WriteLine("\t-m 2 \t Specifies the mode as Reflective DLL Injection");
+            Console.WriteLine("\t-m 2 \t Specifies the mode as DLL Injection");
             Console.WriteLine("\t-m 3 \t Specifies the mode as Process Hollowing");
             Console.WriteLine("\t-m 4 \t No injection! Give me my damn shell\n");
             Console.WriteLine("\t-m 5 \t Powershell session via CLM bypass\n");
@@ -786,13 +786,13 @@ namespace Injector
                     break;
 
                 case 2:
-                    Console.WriteLine("Reflective DLL Injection into process using DLL at " + location);
+                    Console.WriteLine("DLL Injection into process using DLL at " + location);
                     response = reflective_dll_injection(location);
 
                     if (response == 0)
-                        Console.WriteLine("[+] Reflected DLL Injection done :)");
+                        Console.WriteLine("[+] DLL Injection done :)");
                     else
-                        Console.WriteLine("[!] Error running the reflective DLL injection module");
+                        Console.WriteLine("[!] Error running the DLL injection module");
                     break;
 
                 case 3:
