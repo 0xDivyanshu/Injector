@@ -30,5 +30,5 @@ function Invoke-Exe{
     $namespace = ([string]($f.EntryPoint | Select-Object -Property ReflectedType)).Substring(2).split("=")[1].split(",")[0]
     $obj = new-object $namespace
     $obj::Main($arguments.Split(" "))
-    Remove-Variable $f
+    Remove-Variable f
 }
