@@ -1,6 +1,8 @@
 # Injector
 Complete Arsenal of Memory injection and other techniques for red-teaming in Windows
 
+Note: Working to add DInvoke for EDR bypass as well. Stay tuned :)
+
 # What does Injector do?
 
 - Process injection support for shellcode located at remote server as well as local storage. Just specify the shellcode file and it will do the rest. It will by default inject into notepad.exe and if not found, it will create a notepad process and inject into it for persistence.
