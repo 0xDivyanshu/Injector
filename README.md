@@ -1,7 +1,9 @@
 # Injector
 Complete Arsenal of Memory injection and other techniques for red-teaming in Windows
 
-Note: Working to add DInvoke for EDR bypass as well. Stay tuned :)
+# WIP
+-  Working to add DInvoke for EDR bypass as well
+- Code base moving to c++
 
 # What does Injector do?
 
